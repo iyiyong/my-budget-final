@@ -9,9 +9,8 @@ app = Flask(__name__)
 app.secret_key = 'my_super_secret_key'
 
 def get_db_connection():
-    conn = sqlite3.connect('my_budget.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+    # Vercel에서 데이터베이스 연결을 임시로 비활성화합니다.
+    pass
 
 def init_db():
     conn = get_db_connection()
@@ -35,7 +34,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
+# init_db()
 
 def register_user(username, password):
     conn = get_db_connection()
@@ -56,7 +55,7 @@ def check_user(username, password):
     cursor.execute("SELECT id, password FROM users WHERE username = ?", (username,))
     user = cursor.fetchone()
     conn.close()
-    
+
     if user and check_password_hash(user['password'], password):
         return user['id']
     return None
@@ -69,8 +68,7 @@ def add_transaction(user_id, date, item, amount):
     conn.close()
 
 def get_transactions_by_user(user_id):
-    conn = sqlite3.connect('my_budget.db')
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     transactions = conn.execute("SELECT date, item, amount FROM transactions WHERE user_id = ?", (user_id,)).fetchall()
     conn.close()
     return transactions
@@ -83,17 +81,7 @@ def get_balance(user_id):
 
 @app.route('/')
 def home():
-    if 'user_id' not in session:
-        return render_template('home.html')
-    
-    username = session.get('username')
-    balance = get_balance(session['user_id'])
-    
-    return render_template(
-        'index.html',
-        username=username,
-        balance=balance
-    )
+    return "<h1>Welcome to my-budget!</h1>"
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -104,7 +92,7 @@ def register():
             return "<h1>회원가입 성공! 로그인 페이지로 이동하세요.</h1><a href='/login'>로그인</a>"
         else:
             return "<h1>이미 존재하는 아이디입니다.</h1><a href='/register'>다시 시도</a>"
-    
+
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -119,7 +107,7 @@ def login():
             return redirect(url_for('home'))
         else:
             return "<h1>로그인 실패. 아이디 또는 비밀번호를 확인하세요.</h1>"
-    
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -132,26 +120,26 @@ def logout():
 def add():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-        
+
     if request.method == 'POST':
         date = request.form['date']
         item = request.form['item']
         amount = int(request.form['amount'])
         transaction_type = request.form['transaction_type']
-        
+
         if transaction_type == 'expense':
             amount = -amount
 
         add_transaction(session['user_id'], date, item, amount)
         return redirect(url_for('home'))
-    
+
     return render_template('add.html')
 
 @app.route('/view')
 def view():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     year = int(request.args.get('year', date.today().year))
     month = int(request.args.get('month', date.today().month))
 
@@ -178,7 +166,7 @@ def view():
 
     num_days = monthrange(year, month)[1]
     first_day_of_week = monthrange(year, month)[0]
-    
+
     username = session.get('username')
 
     return render_template(
