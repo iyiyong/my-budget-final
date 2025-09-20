@@ -13,6 +13,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
+            overflow-x: hidden; /* 가로 스크롤 방지 */
         }
 
         /* 캘린더 그리드 스타일 */
@@ -57,17 +58,17 @@
         /* 세로 모드 (Portrait) - 더 많은 텍스트 표시 */
         @media (orientation: portrait) {
             .day-cell {
-                min-height: 100px; /* 세로 모드에서 칸 높이 증가 */
+                min-height: 100px;
                 padding: 0.5rem;
             }
             .day-transactions {
                 max-height: 70px;
-                overflow: hidden; /* 스크롤바 없이 내용 표시 */
-                white-space: normal; /* 줄바꿈 허용 */
+                overflow: hidden;
+                white-space: normal;
             }
             .day-transactions > div {
                 white-space: normal;
-                word-break: break-all; /* 단어가 길 경우 줄바꿈 강제 */
+                word-break: break-all;
             }
         }
 
@@ -95,12 +96,43 @@
         .modal-content {
             @apply bg-white rounded-xl p-6 shadow-2xl max-w-lg w-full transform scale-95 transition-transform duration-300;
         }
+
+        /* --- 아이콘 출렁거리는 애니메이션 --- */
+        @keyframes wave {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateY(-8px) scale(1.05); /* 위로 약간 움직이고 커짐 */
+                opacity: 1;
+            }
+        }
+
+        .wave-icon {
+            animation: wave 4s ease-in-out infinite; /* 4초 동안 부드럽게 반복 */
+            position: absolute; /* 절대 위치로 배치 */
+            z-index: 0; /* 배경으로 보냄 */
+            filter: blur(1px); /* 약간 흐리게 */
+        }
+        .wave-icon-1 { animation-delay: 0s; top: 10%; left: 5%; width: 50px; height: 50px; }
+        .wave-icon-2 { animation-delay: 1.5s; top: 20%; right: 10%; width: 60px; height: 60px; }
+        .wave-icon-3 { animation-delay: 3s; bottom: 15%; left: 15%; width: 40px; height: 40px; }
+        .wave-icon-4 { animation-delay: 0.5s; top: 40%; left: 2%; width: 70px; height: 70px; }
+        .wave-icon-5 { animation-delay: 2.2s; bottom: 5%; right: 5%; width: 55px; height: 55px; }
+        /* 여기에 더 많은 아이콘을 추가할 수 있습니다 */
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-    <div class="container mx-auto p-4 sm:p-8">
-        <header class="flex flex-col sm:flex-row justify-between items-center mb-8">
+    <div class="relative container mx-auto p-4 sm:p-8 overflow-hidden">
+        <div class="wave-icon wave-icon-1 bg-purple-300 rounded-full opacity-80"></div>
+        <div class="wave-icon wave-icon-2 bg-yellow-300 rounded-full opacity-80"></div>
+        <div class="wave-icon wave-icon-3 bg-green-300 rounded-full opacity-80"></div>
+        <div class="wave-icon wave-icon-4 bg-blue-300 rounded-full opacity-80"></div>
+        <div class="wave-icon wave-icon-5 bg-pink-300 rounded-full opacity-80"></div>
+        
+        <header class="relative z-10 flex flex-col sm:flex-row justify-between items-center mb-8">
             <div class="text-center sm:text-left mb-4 sm:mb-0">
                 <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800">나의 가계부</h1>
                 <p class="text-md sm:text-lg text-gray-600">오늘의 지출과 수입을 기록하세요.</p>
@@ -111,7 +143,7 @@
             </div>
         </header>
 
-        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8">
+        <div class="relative z-10 bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8">
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">월별 요약</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="bg-green-100 p-4 rounded-2xl shadow-inner">
@@ -134,7 +166,7 @@
             </div>
         </div>
         
-        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
+        <div class="relative z-10 bg-white rounded-3xl shadow-xl p-6 sm:p-8">
             <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
                 <div class="flex items-center space-x-2">
                     <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ year }}년 {{ month }}월</h2>
