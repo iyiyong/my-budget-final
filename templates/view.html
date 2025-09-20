@@ -14,10 +14,23 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
+        /* 캘린더 그리드 스타일 */
+        .calendar-grid {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        /* 날짜 셀 스타일 */
         .day-cell {
             min-height: 120px;
             border: 1px solid #e5e7eb;
-            @apply p-2 sm:p-4 rounded-lg transition-transform duration-200 hover:scale-105 hover:shadow-lg;
+            @apply p-2 sm:p-4 rounded-lg transition-transform duration-200 hover:scale-105 hover:shadow-lg flex-shrink-0;
+            width: calc(100% / 7);
+        }
+        @media (max-width: 640px) {
+            .day-cell {
+                min-height: 80px; /* 모바일에서 셀 높이 줄이기 */
+                padding: 0.5rem; /* 모바일에서 패딩 줄이기 */
+            }
         }
         .day-number {
             @apply text-lg font-bold;
@@ -96,13 +109,13 @@
                 </nav>
             </div>
 
-            <div class="grid grid-cols-7 text-center font-semibold text-gray-600 mb-2">
+            <div class="calendar-grid text-center font-semibold text-gray-600 mb-2">
                 {% for day in ['일', '월', '화', '수', '목', '금', '토'] %}
-                    <div class="p-2">{{ day }}</div>
+                    <div class="day-cell p-2 w-1/7">{{ day }}</div>
                 {% endfor %}
             </div>
 
-            <div class="grid grid-cols-7 text-gray-800">
+            <div class="calendar-grid text-gray-800">
                 {% for _ in range(first_day) %}
                     <div class="day-cell bg-gray-50 border-gray-200 cursor-not-allowed"></div>
                 {% endfor %}
