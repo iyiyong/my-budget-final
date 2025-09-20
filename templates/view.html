@@ -36,9 +36,13 @@
             @apply text-lg font-bold;
         }
         .day-transactions {
-            font-size: 0.75rem;
+            font-size: 0.75rem; /* 12px */
             line-height: 1.25;
             @apply mt-1;
+            /* 기존 truncate 대신, 스크롤 가능하도록 변경 */
+            overflow-y: auto; /* 내용이 넘칠 경우 스크롤바 생성 */
+            max-height: 70px; /* .day-cell의 min-height 80px을 고려하여 설정 */
+            -webkit-overflow-scrolling: touch; /* iOS 스크롤 성능 향상 */
         }
         .income { @apply text-green-600 font-medium; }
         .expense { @apply text-red-600 font-medium; }
@@ -127,7 +131,7 @@
                         <div class="day-transactions">
                             {% if transactions[day_str] is defined %}
                                 {% for transaction in transactions[day_str] %}
-                                    <div class="truncate {% if transaction['amount'] > 0 %}income{% else %}expense{% endif %}">
+                                    <div class="{% if transaction['amount'] > 0 %}income{% else %}expense{% endif %}">
                                         {{ transaction['item'] }}: {{ '{:,.0f}'.format(transaction['amount']) }}원
                                     </div>
                                 {% endfor %}
