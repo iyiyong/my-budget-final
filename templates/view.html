@@ -18,33 +18,70 @@
         .calendar-grid {
             display: flex;
             flex-wrap: wrap;
+            border-left: 1px solid #e5e7eb;
+            border-top: 1px solid #e5e7eb;
         }
         /* 날짜 셀 스타일 */
         .day-cell {
             min-height: 120px;
-            border: 1px solid #e5e7eb;
-            @apply p-2 sm:p-4 rounded-lg transition-transform duration-200 hover:scale-105 hover:shadow-lg flex-shrink-0;
+            border-right: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            @apply p-2 sm:p-4 transition-transform duration-200 hover:scale-105 hover:shadow-lg flex-shrink-0 relative;
             width: calc(100% / 7);
+            background-color: #fff;
         }
-        @media (max-width: 640px) {
-            .day-cell {
-                min-height: 80px;
-                padding: 0.5rem;
-            }
+        .day-cell.header {
+            background-color: #f9fafb;
+            text-align: center;
+            font-weight: 600;
         }
+        .day-cell.header:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
         .day-number {
-            @apply text-lg font-bold;
+            @apply text-lg font-bold absolute top-2 left-2;
         }
         .day-transactions {
             font-size: 0.75rem;
             line-height: 1.25;
-            @apply mt-1;
-            overflow-y: auto;
-            max-height: 70px;
-            -webkit-overflow-scrolling: touch;
-            white-space: normal; /* 텍스트 줄바꿈 허용 */
-            word-break: break-all; /* 단어 중간 줄바꿈 허용 */
+            @apply mt-6;
         }
+
+        /* --- 세로모드 (Portrait) --- */
+        @media (orientation: portrait) {
+            .day-cell {
+                min-height: 80px;
+                padding: 0.5rem;
+            }
+            .day-transactions {
+                max-height: 55px;
+                overflow: hidden;
+            }
+            .day-transactions .transaction-item {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+
+        /* --- 가로모드 (Landscape) --- */
+        @media (orientation: landscape) {
+            .day-cell {
+                min-height: 150px;
+            }
+            .day-transactions {
+                max-height: none; /* 높이 제한 해제 */
+                overflow: visible; /* 스크롤바 숨김 */
+            }
+            .day-transactions .transaction-item {
+                white-space: normal; /* 줄바꿈 허용 */
+                overflow: visible; /* 넘치는 부분 보이기 */
+                text-overflow: initial;
+            }
+        }
+        
         .income { @apply text-green-600 font-medium; }
         .expense { @apply text-red-600 font-medium; }
         .selected-day-modal {
@@ -116,7 +153,7 @@
 
             <div class="calendar-grid text-center font-semibold text-gray-600 mb-2">
                 {% for day in ['일', '월', '화', '수', '목', '금', '토'] %}
-                    <div class="day-cell p-2 w-1/7">{{ day }}</div>
+                    <div class="day-cell p-2 w-1/7 header">{{ day }}</div>
                 {% endfor %}
             </div>
 
@@ -127,12 +164,12 @@
 
                 {% for day in range(1, num_days + 1) %}
                     {% set day_str = "%02d"|format(day) %}
-                    <div class="day-cell bg-white border-gray-200 cursor-pointer" onclick="showTransactions('{{ year }}-{{ '%02d'|format(month) }}-{{ day_str }}')">
+                    <div class="day-cell bg-white cursor-pointer" onclick="showTransactions('{{ year }}-{{ '%02d'|format(month) }}-{{ day_str }}')">
                         <div class="day-number">{{ day }}</div>
                         <div class="day-transactions">
                             {% if transactions[day_str] is defined %}
                                 {% for transaction in transactions[day_str] %}
-                                    <div class="{% if transaction['amount'] > 0 %}income{% else %}expense{% endif %}">
+                                    <div class="transaction-item {% if transaction['amount'] > 0 %}income{% else %}expense{% endif %}">
                                         {{ transaction['item'] }}: {{ '{:,.0f}'.format(transaction['amount']) }}원
                                     </div>
                                 {% endfor %}
