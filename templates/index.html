@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 가계부</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full text-center">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 text-shadow">환영합니다, <span class="text-indigo-600">{{ username }}</span>님!</h1>
+            <p class="text-lg text-gray-600 mt-2">오늘의 재정 상태를 한눈에 확인하세요.</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Current Balance Card -->
+            <div class="bg-gray-100 rounded-2xl p-6 shadow-lg">
+                <h2 class="text-xl font-bold text-gray-700 mb-2">현재 잔액</h2>
+                <p class="text-4xl font-bold text-gray-900">{{ "{:,.0f}".format(balance) }}원</p>
+            </div>
+            
+            <!-- Quick Actions Card -->
+            <div class="bg-gray-100 rounded-2xl p-6 shadow-lg flex flex-col justify-center space-y-4">
+                <a href="/add" class="w-full text-center bg-indigo-600 text-white font-semibold py-3 px-6 rounded-full shadow-md hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105">
+                    + 내역 기록하기
+                </a>
+                <a href="/view" class="w-full text-center bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-full hover:bg-gray-300 transition-all duration-300 transform hover:scale-105">
+                    전체 내역 보기
+                </a>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-sm text-gray-500">
+            <a href="/logout" class="hover:underline">로그아웃</a>
+            <p class="mt-2">&copy; 2025 가계부. 모든 권리 보유.</p>
+        </footer>
+    </div>
+</body>
+</html>

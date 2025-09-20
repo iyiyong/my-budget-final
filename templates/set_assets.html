@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>초기 자산 설정</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>초기 자산 설정</h1>
+    <form method="POST">
+        <p>프로그램을 시작할 때의 총 자산을 입력하세요.</p>
+        총 자산: <input type="number" name="initial_assets" required><br>
+        <input type="submit" value="설정">
+    </form>
+    <a href="/">돌아가기</a>
+</body>
+</html>

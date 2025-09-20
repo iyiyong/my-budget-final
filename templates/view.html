@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가계부 캘린더</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .day-cell {
+            min-height: 120px;
+            border: 1px solid #e5e7eb;
+            @apply p-2 sm:p-4 rounded-lg transition-transform duration-200 hover:scale-105 hover:shadow-lg;
+        }
+        .day-number {
+            @apply text-lg font-bold;
+        }
+        .day-transactions {
+            font-size: 0.75rem;
+            line-height: 1.25;
+            @apply mt-1;
+        }
+        .income { @apply text-green-600 font-medium; }
+        .expense { @apply text-red-600 font-medium; }
+        .selected-day-modal {
+            @apply fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center z-50;
+        }
+        .modal-content {
+            @apply bg-white rounded-xl p-6 shadow-2xl max-w-lg w-full transform scale-95 transition-transform duration-300;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <div class="container mx-auto p-4 sm:p-8">
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-8">
+            <div class="text-center sm:text-left mb-4 sm:mb-0">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800">나의 가계부</h1>
+                <p class="text-md sm:text-lg text-gray-600">오늘의 지출과 수입을 기록하세요.</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <p class="text-lg text-gray-700">환영합니다, <span class="font-semibold text-indigo-600">{{ username }}</span>님!</p>
+                <a href="/logout" class="bg-red-500 text-white font-medium py-2 px-4 rounded-full shadow-md hover:bg-red-600 transition-colors duration-200">로그아웃</a>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">월별 요약</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-green-100 p-4 rounded-2xl shadow-inner">
+                    <p class="text-green-800 font-semibold">총 수입</p>
+                    <p class="text-2xl font-bold text-green-700 mt-1" id="total-income">0원</p>
+                </div>
+                <div class="bg-red-100 p-4 rounded-2xl shadow-inner">
+                    <p class="text-red-800 font-semibold">총 지출</p>
+                    <p class="text-2xl font-bold text-red-700 mt-1" id="total-expense">0원</p>
+                </div>
+                <div class="bg-blue-100 p-4 rounded-2xl shadow-inner">
+                    <p class="text-blue-800 font-semibold">총 순이익</p>
+                    <p class="text-2xl font-bold text-blue-700 mt-1" id="net-balance">0원</p>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-center">
+                <div class="w-full max-w-md">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+                <div class="flex items-center space-x-2">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ year }}년 {{ month }}월</h2>
+                    <a href="/add" class="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-full hover:bg-indigo-600 transition-colors duration-200 shadow-md">
+                        + 지출 기록하기
+                    </a>
+                </div>
+                <nav class="flex space-x-2 mt-4 sm:mt-0">
+                    <a href="/view?year={{ prev_year }}&month={{ prev_month }}" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                    <a href="/view?year={{ next_year }}&month={{ next_month }}" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 요일 표시 -->
+            <div class="calendar-grid text-center font-semibold text-gray-600 mb-2">
+                {% for day in ['일', '월', '화', '수', '목', '금', '토'] %}
+                    <div class="p-2">{{ day }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- 달력 그리드 -->
+            <div class="calendar-grid text-gray-800">
+                <!-- 이전 달의 빈 공간 -->
+                {% for _ in range(first_day) %}
+                    <div class="day-cell bg-gray-50 border-gray-200 cursor-not-allowed"></div>
+                {% endfor %}
+
+                <!-- 현재 달의 날짜 -->
+                {% for day in range(1, num_days + 1) %}
+                    {% set day_str = "%02d"|format(day) %}
+                    <div class="day-cell bg-white border-gray-200 cursor-pointer" onclick="showTransactions('{{ year }}-{{ '%02d'|format(month) }}-{{ day_str }}')">
+                        <div class="day-number">{{ day }}</div>
+                        <div class="day-transactions">
+                            {% if transactions[day_str] is defined %}
+                                {% for transaction in transactions[day_str] %}
+                                    <div class="truncate {% if transaction['amount'] > 0 %}income{% else %}expense{% endif %}">
+                                        {{ transaction['item'] }}: {{ '{:,.0f}'.format(transaction['amount']) }}원
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- 다음 달의 빈 공간 -->
+                {% set remaining_days = 42 - (num_days + first_day) %}
+                {% for _ in range(remaining_days) %}
+                    <div class="day-cell bg-gray-50 border-gray-200 cursor-not-allowed"></div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 일별 내역을 보여주는 모달 창 -->
+    <div id="transaction-modal" class="selected-day-modal hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="modal-date"></h3>
+                <button onclick="hideTransactions()" class="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <ul id="modal-transactions" class="space-y-2"></ul>
+            <p class="text-right font-semibold mt-4" id="modal-day-total"></p>
+        </div>
+    </div>
+
+    <script>
+        // Flask에서 전달된 데이터를 JavaScript 변수로 변환
+        const transactionsData = JSON.parse('{{ transactions | tojson }}');
+        const allTransactions = Object.values(transactionsData).flat();
+        
+        let selectedTransactions = {};
+
+        // 월별 총 수입, 총 지출, 순이익 계산 및 차트 업데이트
+        function updateSummaryAndChart() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+            const categories = {};
+            
+            allTransactions.forEach(t => {
+                if (t.amount > 0) {
+                    totalIncome += t.amount;
+                } else {
+                    totalExpense += t.amount;
+                    const item = t.item || '기타';
+                    categories[item] = (categories[item] || 0) + Math.abs(t.amount);
+                }
+            });
+
+            document.getElementById('total-income').textContent = `${totalIncome.toLocaleString()}원`;
+            document.getElementById('total-expense').textContent = `${Math.abs(totalExpense).toLocaleString()}원`;
+            document.getElementById('net-balance').textContent = `${(totalIncome + totalExpense).toLocaleString()}원`;
+
+            const chartData = {
+                labels: Object.keys(categories),
+                datasets: [{
+                    label: '지출 카테고리별 비중',
+                    data: Object.values(categories),
+                    backgroundColor: [
+                        '#6366f1', '#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a855f7', '#ec4899', '#f97316'
+                    ],
+                    hoverOffset: 4
+                }]
+            };
+
+            const config = {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: '월별 소비 분석'
+                        }
+                    }
+                }
+            };
+            
+            const chartCanvas = document.getElementById('expenseChart');
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+            window.myChart = new Chart(chartCanvas, config);
+        }
+
+        // 페이지 로드 시 차트 및 요약 정보 업데이트
+        document.addEventListener('DOMContentLoaded', updateSummaryAndChart);
+
+        // 특정 날짜의 거래 내역을 모달로 보여주는 함수
+        function showTransactions(date) {
+            const dateStr = date.split('-')[2];
+            const transactions = transactionsData[dateStr] || [];
+            
+            const modal = document.getElementById('transaction-modal');
+            const modalDate = document.getElementById('modal-date');
+            const modalTransactions = document.getElementById('modal-transactions');
+            const modalDayTotal = document.getElementById('modal-day-total');
+
+            modalDate.textContent = date.replace(/-/g, '.');
+            modalTransactions.innerHTML = '';
+            
+            let dailyTotal = 0;
+            if (transactions.length > 0) {
+                transactions.forEach(t => {
+                    const listItem = document.createElement('li');
+                    listItem.className = `flex justify-between items-center p-2 rounded-lg ${t.amount > 0 ? 'bg-green-50' : 'bg-red-50'}`;
+                    
+                    const itemText = document.createElement('span');
+                    itemText.textContent = t.item;
+                    itemText.className = "text-gray-800";
+                    
+                    const amountText = document.createElement('span');
+                    amountText.textContent = `${t.amount.toLocaleString()}원`;
+                    amountText.className = `${t.amount > 0 ? 'text-green-600' : 'text-red-600'} font-semibold`;
+                    
+                    listItem.appendChild(itemText);
+                    listItem.appendChild(amountText);
+                    modalTransactions.appendChild(listItem);
+
+                    dailyTotal += t.amount;
+                });
+            } else {
+                const noData = document.createElement('li');
+                noData.textContent = "이 날짜에 기록된 내역이 없습니다.";
+                noData.className = "text-gray-500 text-center py-4";
+                modalTransactions.appendChild(noData);
+            }
+
+            modalDayTotal.textContent = `합계: ${dailyTotal.toLocaleString()}원`;
+            modal.classList.remove('hidden');
+        }
+
+        // 모달 창을 닫는 함수
+        function hideTransactions() {
+            document.getElementById('transaction-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+
