@@ -14,6 +14,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
+
         /* 캘린더 그리드 스타일 */
         .calendar-grid {
             display: flex;
@@ -21,6 +22,7 @@
             border-left: 1px solid #e5e7eb;
             border-top: 1px solid #e5e7eb;
         }
+
         /* 날짜 셀 스타일 */
         .day-cell {
             min-height: 120px;
@@ -30,55 +32,58 @@
             width: calc(100% / 7);
             background-color: #fff;
         }
+
         .day-cell.header {
             background-color: #f9fafb;
             text-align: center;
             font-weight: 600;
         }
+        
         .day-cell.header:hover {
             transform: none;
             box-shadow: none;
         }
-        
+
         .day-number {
             @apply text-lg font-bold absolute top-2 left-2;
         }
+
         .day-transactions {
             font-size: 0.75rem;
             line-height: 1.25;
             @apply mt-6;
         }
 
-        /* --- 세로모드 (Portrait) --- */
+        /* 세로 모드 (Portrait) - 더 많은 텍스트 표시 */
         @media (orientation: portrait) {
             .day-cell {
-                min-height: 80px;
+                min-height: 100px; /* 세로 모드에서 칸 높이 증가 */
                 padding: 0.5rem;
             }
             .day-transactions {
-                max-height: 55px;
-                overflow: hidden;
+                max-height: 70px;
+                overflow: hidden; /* 스크롤바 없이 내용 표시 */
+                white-space: normal; /* 줄바꿈 허용 */
             }
-            .day-transactions .transaction-item {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+            .day-transactions > div {
+                white-space: normal;
+                word-break: break-all; /* 단어가 길 경우 줄바꿈 강제 */
             }
         }
 
-        /* --- 가로모드 (Landscape) --- */
+        /* 가로 모드 (Landscape) */
         @media (orientation: landscape) {
             .day-cell {
                 min-height: 150px;
             }
             .day-transactions {
-                max-height: none; /* 높이 제한 해제 */
-                overflow: visible; /* 스크롤바 숨김 */
+                max-height: none;
+                overflow: visible;
+                white-space: normal;
             }
-            .day-transactions .transaction-item {
-                white-space: normal; /* 줄바꿈 허용 */
-                overflow: visible; /* 넘치는 부분 보이기 */
-                text-overflow: initial;
+            .day-transactions > div {
+                white-space: normal;
+                word-break: normal;
             }
         }
         
