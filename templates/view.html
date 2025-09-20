@@ -28,21 +28,22 @@
         }
         @media (max-width: 640px) {
             .day-cell {
-                min-height: 80px; /* 모바일에서 셀 높이 줄이기 */
-                padding: 0.5rem; /* 모바일에서 패딩 줄이기 */
+                min-height: 80px;
+                padding: 0.5rem;
             }
         }
         .day-number {
             @apply text-lg font-bold;
         }
         .day-transactions {
-            font-size: 0.75rem; /* 12px */
+            font-size: 0.75rem;
             line-height: 1.25;
             @apply mt-1;
-            /* 기존 truncate 대신, 스크롤 가능하도록 변경 */
-            overflow-y: auto; /* 내용이 넘칠 경우 스크롤바 생성 */
-            max-height: 70px; /* .day-cell의 min-height 80px을 고려하여 설정 */
-            -webkit-overflow-scrolling: touch; /* iOS 스크롤 성능 향상 */
+            overflow-y: auto;
+            max-height: 70px;
+            -webkit-overflow-scrolling: touch;
+            white-space: normal; /* 텍스트 줄바꿈 허용 */
+            word-break: break-all; /* 단어 중간 줄바꿈 허용 */
         }
         .income { @apply text-green-600 font-medium; }
         .expense { @apply text-red-600 font-medium; }
@@ -165,13 +166,11 @@
     </div>
 
     <script>
-        // Flask에서 전달된 데이터를 JavaScript 변수로 변환
         const transactionsData = JSON.parse('{{ transactions | tojson }}');
         const allTransactions = Object.values(transactionsData).flat();
         
         let selectedTransactions = {};
 
-        // 월별 총 수입, 총 지출, 순이익 계산 및 차트 업데이트
         function updateSummaryAndChart() {
             let totalIncome = 0;
             let totalExpense = 0;
@@ -227,10 +226,8 @@
             window.myChart = new Chart(chartCanvas, config);
         }
 
-        // 페이지 로드 시 차트 및 요약 정보 업데이트
         document.addEventListener('DOMContentLoaded', updateSummaryAndChart);
 
-        // 특정 날짜의 거래 내역을 모달로 보여주는 함수
         function showTransactions(date) {
             const dateStr = date.split('-')[2];
             const transactions = transactionsData[dateStr] || [];
@@ -274,7 +271,6 @@
             modal.classList.remove('hidden');
         }
 
-        // 모달 창을 닫는 함수
         function hideTransactions() {
             document.getElementById('transaction-modal').classList.add('hidden');
         }
