@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>가계부 캘린더</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js for visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,55 +14,26 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
-
-        /* 달력 그리드 */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-        }
-
-        /* 각 날짜 셀 */
         .day-cell {
-            @apply border rounded-lg p-2 sm:p-4 transition-transform duration-200 hover:scale-105 hover:shadow-lg;
-            min-height: 80px; /* 모바일 기준 */
-            overflow-hidden; /* 셀 밖으로 내용 튀어나오지 않도록 */
+            min-height: 120px;
+            border: 1px solid #e5e7eb;
+            @apply p-2 sm:p-4 rounded-lg transition-transform duration-200 hover:scale-105 hover:shadow-lg;
         }
-        @media (min-width: 640px) {
-            .day-cell {
-                min-height: 120px; /* sm 이상 */
-            }
-        }
-
-        /* 날짜 숫자 */
         .day-number {
-            @apply text-base sm:text-lg font-bold;
+            @apply text-lg font-bold;
         }
-
-        /* 거래 내역 */
         .day-transactions {
-            font-size: 0.6rem; /* 모바일 기준 */
-            line-height: 1.2;
-            @apply mt-1 break-words;
-            max-height: 4rem; /* 높이 제한 */
-            overflow-y: auto; /* 많으면 스크롤 */
+            font-size: 0.75rem;
+            line-height: 1.25;
+            @apply mt-1;
         }
-        @media (min-width: 640px) {
-            .day-transactions {
-                font-size: 0.75rem; /* sm 이상 */
-                max-height: 6rem; /* sm 이상 높이 */
-            }
-        }
-
         .income { @apply text-green-600 font-medium; }
         .expense { @apply text-red-600 font-medium; }
-
-        /* 모달 창 */
         .selected-day-modal {
             @apply fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center z-50;
         }
         .modal-content {
-            @apply bg-white rounded-xl p-4 sm:p-6 shadow-2xl max-w-md sm:max-w-lg w-full transform scale-95 transition-transform duration-300;
+            @apply bg-white rounded-xl p-6 shadow-2xl max-w-lg w-full transform scale-95 transition-transform duration-300;
         }
     </style>
 </head>
@@ -82,62 +51,58 @@
             </div>
         </header>
 
-        <!-- 월별 요약 -->
-        <div class="bg-white rounded-3xl shadow-xl p-4 sm:p-8 mb-8">
+        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8">
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">월별 요약</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div class="bg-green-100 p-3 sm:p-4 rounded-2xl shadow-inner">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-green-100 p-4 rounded-2xl shadow-inner">
                     <p class="text-green-800 font-semibold">총 수입</p>
-                    <p class="text-2xl sm:text-3xl font-bold text-green-700 mt-1" id="total-income">0원</p>
+                    <p class="text-2xl font-bold text-green-700 mt-1" id="total-income">0원</p>
                 </div>
-                <div class="bg-red-100 p-3 sm:p-4 rounded-2xl shadow-inner">
+                <div class="bg-red-100 p-4 rounded-2xl shadow-inner">
                     <p class="text-red-800 font-semibold">총 지출</p>
-                    <p class="text-2xl sm:text-3xl font-bold text-red-700 mt-1" id="total-expense">0원</p>
+                    <p class="text-2xl font-bold text-red-700 mt-1" id="total-expense">0원</p>
                 </div>
-                <div class="bg-blue-100 p-3 sm:p-4 rounded-2xl shadow-inner">
+                <div class="bg-blue-100 p-4 rounded-2xl shadow-inner">
                     <p class="text-blue-800 font-semibold">총 순이익</p>
-                    <p class="text-2xl sm:text-3xl font-bold text-blue-700 mt-1" id="net-balance">0원</p>
+                    <p class="text-2xl font-bold text-blue-700 mt-1" id="net-balance">0원</p>
                 </div>
             </div>
-            <div class="mt-6 sm:mt-8 flex justify-center">
-                <div class="w-full max-w-md sm:max-w-lg">
+            <div class="mt-8 flex justify-center">
+                <div class="w-full max-w-md">
                     <canvas id="expenseChart"></canvas>
                 </div>
             </div>
         </div>
-
-        <!-- 달력 -->
-        <div class="bg-white rounded-3xl shadow-xl p-4 sm:p-8">
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6">
+        
+        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
                 <div class="flex items-center space-x-2">
                     <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ year }}년 {{ month }}월</h2>
-                    <a href="/add" class="bg-indigo-500 text-white font-semibold py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-indigo-600 transition-colors duration-200 shadow-md">
+                    <a href="/add" class="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-full hover:bg-indigo-600 transition-colors duration-200 shadow-md">
                         + 지출 기록하기
                     </a>
                 </div>
-                <nav class="flex space-x-2 mt-2 sm:mt-0">
+                <nav class="flex space-x-2 mt-4 sm:mt-0">
                     <a href="/view?year={{ prev_year }}&month={{ prev_month }}" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
                     </a>
                     <a href="/view?year={{ next_year }}&month={{ next_month }}" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </a>
                 </nav>
             </div>
 
-            <!-- 요일 -->
-            <div class="calendar-grid text-center font-semibold text-gray-600 mb-2">
+            <div class="grid grid-cols-7 text-center font-semibold text-gray-600 mb-2">
                 {% for day in ['일', '월', '화', '수', '목', '금', '토'] %}
-                    <div class="p-1 sm:p-2">{{ day }}</div>
+                    <div class="p-2">{{ day }}</div>
                 {% endfor %}
             </div>
 
-            <!-- 날짜 셀 -->
-            <div class="calendar-grid text-gray-800">
+            <div class="grid grid-cols-7 text-gray-800">
                 {% for _ in range(first_day) %}
                     <div class="day-cell bg-gray-50 border-gray-200 cursor-not-allowed"></div>
                 {% endfor %}
@@ -167,7 +132,6 @@
 
     </div>
 
-    <!-- 모달 -->
     <div id="transaction-modal" class="selected-day-modal hidden">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
@@ -184,14 +148,18 @@
     </div>
 
     <script>
+        // Flask에서 전달된 데이터를 JavaScript 변수로 변환
         const transactionsData = JSON.parse('{{ transactions | tojson }}');
         const allTransactions = Object.values(transactionsData).flat();
+        
+        let selectedTransactions = {};
 
+        // 월별 총 수입, 총 지출, 순이익 계산 및 차트 업데이트
         function updateSummaryAndChart() {
             let totalIncome = 0;
             let totalExpense = 0;
             const categories = {};
-
+            
             allTransactions.forEach(t => {
                 if (t.amount > 0) {
                     totalIncome += t.amount;
@@ -224,23 +192,32 @@
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { position: 'bottom' },
-                        title: { display: true, text: '월별 소비 분석' }
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: '월별 소비 분석'
+                        }
                     }
                 }
             };
-
+            
             const chartCanvas = document.getElementById('expenseChart');
-            if (window.myChart) { window.myChart.destroy(); }
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
             window.myChart = new Chart(chartCanvas, config);
         }
 
+        // 페이지 로드 시 차트 및 요약 정보 업데이트
         document.addEventListener('DOMContentLoaded', updateSummaryAndChart);
 
+        // 특정 날짜의 거래 내역을 모달로 보여주는 함수
         function showTransactions(date) {
             const dateStr = date.split('-')[2];
             const transactions = transactionsData[dateStr] || [];
-
+            
             const modal = document.getElementById('transaction-modal');
             const modalDate = document.getElementById('modal-date');
             const modalTransactions = document.getElementById('modal-transactions');
@@ -248,18 +225,21 @@
 
             modalDate.textContent = date.replace(/-/g, '.');
             modalTransactions.innerHTML = '';
-
+            
             let dailyTotal = 0;
             if (transactions.length > 0) {
                 transactions.forEach(t => {
                     const listItem = document.createElement('li');
                     listItem.className = `flex justify-between items-center p-2 rounded-lg ${t.amount > 0 ? 'bg-green-50' : 'bg-red-50'}`;
+                    
                     const itemText = document.createElement('span');
                     itemText.textContent = t.item;
                     itemText.className = "text-gray-800";
+                    
                     const amountText = document.createElement('span');
                     amountText.textContent = `${t.amount.toLocaleString()}원`;
                     amountText.className = `${t.amount > 0 ? 'text-green-600' : 'text-red-600'} font-semibold`;
+                    
                     listItem.appendChild(itemText);
                     listItem.appendChild(amountText);
                     modalTransactions.appendChild(listItem);
@@ -277,6 +257,7 @@
             modal.classList.remove('hidden');
         }
 
+        // 모달 창을 닫는 함수
         function hideTransactions() {
             document.getElementById('transaction-modal').classList.add('hidden');
         }
