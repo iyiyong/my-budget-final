@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>거래 수정</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">거래 수정</h2>
+        <form action="{{ url_for('update_transaction', transaction_id=transaction['id']) }}" method="post" class="space-y-4">
+            <div>
+                <label for="date" class="block text-gray-700 font-medium mb-1">날짜</label>
+                <input type="date" id="date" name="date" value="{{ transaction['date'] }}" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="item" class="block text-gray-700 font-medium mb-1">항목</label>
+                <input type="text" id="item" name="item" value="{{ transaction['item'] }}" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="amount" class="block text-gray-700 font-medium mb-1">금액</label>
+                <input type="number" id="amount" name="amount" value="{{ transaction['amount']|abs }}" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="transaction_type" class="block text-gray-700 font-medium mb-1">유형</label>
+                <select id="transaction_type" name="transaction_type"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="income" {% if transaction['amount'] > 0 %}selected{% endif %}>수입</option>
+                    <option value="expense" {% if transaction['amount'] < 0 %}selected{% endif %}>지출</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                수정 완료
+            </button>
+        </form>
+        <div class="mt-4 text-center">
+            <a href="{{ url_for('view') }}" class="text-indigo-500 hover:underline">목록으로 돌아가기</a>
+        </div>
+    </div>
+</body>
+</html>
