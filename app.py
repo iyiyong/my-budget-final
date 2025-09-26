@@ -2,7 +2,6 @@ from flask import Flask, request, redirect, url_for, render_template, session
 from datetime import datetime, date
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
 from calendar import monthrange
 
 app = Flask(__name__)
@@ -67,13 +66,6 @@ def add_transaction(user_id, date, item, amount):
                  (user_id, date, item, amount))
     conn.commit()
     conn.close()
-
-def get_transactions_by_user(user_id):
-    conn = sqlite3.connect('my_budget.db')
-    conn.row_factory = sqlite3.Row
-    transactions = conn.execute("SELECT date, item, amount FROM transactions WHERE user_id = ?", (user_id,)).fetchall()
-    conn.close()
-    return transactions
 
 def get_balance(user_id):
     conn = get_db_connection()
@@ -157,7 +149,7 @@ def view():
 
     conn = get_db_connection()
     transactions_raw = conn.execute("""
-        SELECT date, item, amount
+        SELECT id, date, item, amount
         FROM transactions
         WHERE user_id = ? AND SUBSTR(date, 1, 4) = ? AND SUBSTR(date, 6, 2) = ?
         ORDER BY date ASC
@@ -194,6 +186,56 @@ def view():
         num_days=num_days,
         first_day=first_day_of_week
     )
+
+# --- 거래 수정 및 삭제 기능 ---
+@app.route('/edit/<int:transaction_id>', methods=['GET'])
+def edit_transaction(transaction_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    transaction = conn.execute('SELECT * FROM transactions WHERE id = ? AND user_id = ?',
+                               (transaction_id, session['user_id'])).fetchone()
+    conn.close()
+
+    if transaction is None:
+        return "Transaction not found", 404
+
+    return render_template('edit_expense.html', transaction=transaction)
+
+@app.route('/update/<int:transaction_id>', methods=['POST'])
+def update_transaction(transaction_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    date = request.form['date']
+    item = request.form['item']
+    amount = int(request.form['amount'])
+    transaction_type = request.form['transaction_type']
+
+    if transaction_type == 'expense':
+        amount = -amount
+
+    conn = get_db_connection()
+    conn.execute('UPDATE transactions SET date = ?, item = ?, amount = ? WHERE id = ? AND user_id = ?',
+                 (date, item, amount, transaction_id, session['user_id']))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('view'))
+
+@app.route('/delete/<int:transaction_id>', methods=['POST'])
+def delete_transaction(transaction_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    conn.execute('DELETE FROM transactions WHERE id = ? AND user_id = ?',
+                 (transaction_id, session['user_id']))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('view'))
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
