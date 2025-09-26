@@ -208,6 +208,10 @@
                                 {% for transaction in transactions[day_str] %}
                                     <div class="transaction-item {% if transaction['amount'] > 0 %}income{% else %}expense{% endif %}">
                                         {{ transaction['item'] }}: {{ '{:,.0f}'.format(transaction['amount']) }}원
+                                        <a href="{{ url_for('edit_transaction', transaction_id=transaction['id']) }}" class="text-blue-500 hover:text-blue-700 text-sm ml-2">수정</a>
+                                        <form action="{{ url_for('delete_transaction', transaction_id=transaction['id']) }}" method="post" style="display:inline;">
+                                            <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?');" class="text-red-500 hover:text-red-700 text-sm ml-1">삭제</button>
+                                        </form>
                                     </div>
                                 {% endfor %}
                             {% endif %}
@@ -240,6 +244,7 @@
     </div>
 
     <script>
+        // 이 부분은 파이썬 템플릿 엔진에 의해 렌더링될 때 실제 데이터로 채워집니다.
         const transactionsData = JSON.parse('{{ transactions | tojson }}');
         const allTransactions = Object.values(transactionsData).flat();
         
@@ -256,6 +261,7 @@
                 } else {
                     totalExpense += t.amount;
                     const item = t.item || '기타';
+                    // item의 총 지출 금액을 계산합니다.
                     categories[item] = (categories[item] || 0) + Math.abs(t.amount);
                 }
             });
@@ -327,9 +333,37 @@
                     const amountText = document.createElement('span');
                     amountText.textContent = `${t.amount.toLocaleString()}원`;
                     amountText.className = `${t.amount > 0 ? 'text-green-600' : 'text-red-600'} font-semibold`;
+
+                    // 수정 및 삭제 버튼을 모달에 추가
+                    const actionLinks = document.createElement('div');
+                    actionLinks.className = "flex items-center space-x-2";
                     
+                    const editLink = document.createElement('a');
+                    editLink.href = `/edit/${t.id}`;
+                    editLink.textContent = "수정";
+                    editLink.className = "text-blue-500 hover:text-blue-700 text-sm";
+                    
+                    const deleteForm = document.createElement('form');
+                    deleteForm.action = `/delete/${t.id}`;
+                    deleteForm.method = "post";
+                    deleteForm.style.display = "inline";
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.type = "submit";
+                    deleteButton.textContent = "삭제";
+                    deleteButton.className = "text-red-500 hover:text-red-700 text-sm";
+                    deleteButton.onclick = function() {
+                        return confirm('정말 삭제하시겠습니까?');
+                    };
+
+                    deleteForm.appendChild(deleteButton);
+                    actionLinks.appendChild(editLink);
+                    actionLinks.appendChild(deleteForm);
+
                     listItem.appendChild(itemText);
                     listItem.appendChild(amountText);
+                    listItem.appendChild(actionLinks);
+
                     modalTransactions.appendChild(listItem);
 
                     dailyTotal += t.amount;
